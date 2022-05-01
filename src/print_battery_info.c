@@ -187,8 +187,10 @@ static bool slurp_battery_info(battery_info_ctx_t *ctx, struct battery_info *bat
             batt_info->status = CS_CHARGING;
         else if (BEGINS_WITH(last, "POWER_SUPPLY_STATUS=Full"))
             batt_info->status = CS_FULL;
-        else if (BEGINS_WITH(last, "POWER_SUPPLY_STATUS=Discharging") || BEGINS_WITH(last, "POWER_SUPPLY_STATUS=Not charging"))
+        else if (BEGINS_WITH(last, "POWER_SUPPLY_STATUS=Discharging"))
             batt_info->status = CS_DISCHARGING;
+        else if (BEGINS_WITH(last, "POWER_SUPPLY_STATUS=Not charging"))
+            batt_info->status = CS_UNKNOWN;
         else if (BEGINS_WITH(last, "POWER_SUPPLY_STATUS="))
             batt_info->status = CS_UNKNOWN;
         else if (BEGINS_WITH(last, "POWER_SUPPLY_CHARGE_FULL_DESIGN=") ||
