@@ -39,11 +39,22 @@
 #include "i3status.h"
 
 struct cpu_usage {
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+    long user;
+    long nice;
+    long system;
+    long idle;
+    long total;
+#else
     int user;
     int nice;
     int system;
     int idle;
+#if defined(__OpenBSD__)
+    int spin;
+#endif
     int total;
+#endif
 };
 
 #if defined(__linux__)
@@ -63,7 +74,12 @@ void print_cpu_usage(cpu_usage_ctx_t *ctx) {
     const char *walk;
     char *outwalk = ctx->buf;
     struct cpu_usage curr_all = {0, 0, 0, 0, 0};
-    int diff_idle, diff_total, diff_usage;
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+    long diff_idle, diff_total;
+#else
+    int diff_idle, diff_total;
+#endif
+    int diff_usage;
     bool colorful_output = false;
 
 #if defined(__linux__)
@@ -150,8 +166,16 @@ void print_cpu_usage(cpu_usage_ctx_t *ctx) {
     curr_all.user = cp_time[CP_USER];
     curr_all.nice = cp_time[CP_NICE];
     curr_all.system = cp_time[CP_SYS];
+#if defined(__DragonFly__)
+    curr_all.system += cp_time[CP_INTR];
+#endif
     curr_all.idle = cp_time[CP_IDLE];
+#if defined(__OpenBSD__)
+    curr_all.spin = cp_time[CP_SPIN];
+    curr_all.total = curr_all.user + curr_all.nice + curr_all.system + curr_all.idle + curr_all.spin;
+#else
     curr_all.total = curr_all.user + curr_all.nice + curr_all.system + curr_all.idle;
+#endif
     diff_idle = curr_all.idle - prev_all.idle;
     diff_total = curr_all.total - prev_all.total;
     diff_usage = (diff_total ? (1000 * (diff_total - diff_idle) / diff_total + 5) / 10 : 0);
